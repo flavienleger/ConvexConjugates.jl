@@ -20,20 +20,20 @@ function run_hpc_example()
     M2 = 250
     
     # 2. Define the exact 1D coordinate grids
-    # Primal grid (y1, y2)
-    y1 = collect(range(-2.0, 2.0, length=N1))
-    y2 = collect(range(-2.0, 2.0, length=N2))
+    # Primal grid (x1, x2)
+    x1 = collect(range(0.0, 2.0, length=N1))
+    x2 = collect(range(-2.0, 2.0, length=N2))
     
-    # Dual grid (x1, x2)
-    x1 = collect(range(-2.0, 2.0, length=M1))
-    x2 = collect(range(-2.0, 2.0, length=M2))
+    # Dual grid (y1, y2)
+    y1 = collect(range(-1.0, 1.0, length=M1))
+    y2 = collect(range(-4.0, 0.0, length=M2))
     
     # 3. Setup the Primal State
     # We use a standard parabola: f(y) = 0.5 * |y|^2
     # The continuous conjugate of 0.5*|y|^2 is exactly 0.5*|x|^2
     f = zeros(Float64, N1, N2)
     for j in 1:N2, i in 1:N1
-        f[i, j] = 0.5 * (y1[i]^2 + y2[j]^2)
+        f[i, j] = 0.5 * (x1[i]^2 + x2[j]^2)
     end
     
     # ==========================================================================
@@ -54,7 +54,7 @@ function run_hpc_example()
     for step in 1:iters
         # We pass the pre-allocated arrays, grids, and the cache. 
         # This function call allocates exactly 0 bytes of memory.
-        compute_conjugate_and_map!(g, T1, T2, f, y1, y2, x1, x2, cache)
+        compute_conjugate_and_map!(g, T1, T2, y1, y2, f, x1, x2, cache)
         
         # ... (In a real solver, you would update `f` here based on `g` and `T1/T2`) ...
     end
@@ -68,14 +68,14 @@ function run_hpc_example()
     # Verify the math: check a point near the center of the dual grid
     center_i = M1 ÷ 2
     center_j = M2 ÷ 2
-    test_x1 = x1[center_i]
-    test_x2 = x2[center_j]
+    test_y1 = y1[center_i]
+    test_y2 = y2[center_j]
     
-    expected_g = 0.5 * (test_x1^2 + test_x2^2)
+    expected_g = 0.5 * (test_y1^2 + test_y2^2)
     actual_g = g[center_i, center_j]
     
     println("\n--- Math Check ---")
-    @printf("Evaluating at X = (%.2f, %.2f)\n", test_x1, test_x2)
+    @printf("Evaluating at X = (%.2f, %.2f)\n", test_y1, test_y2)
     @printf("Analytical g(x): %.6f\n", expected_g)
     @printf("Numerical g(x):  %.6f\n", actual_g)
     
