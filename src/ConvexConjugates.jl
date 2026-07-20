@@ -28,6 +28,10 @@ struct ConjugateCache
     end
 end
 
+# The Casual Outer Constructor
+ConjugateCache(N::Int) = ConjugateCache(N, N, N, N)
+ConjugateCache(N::Int, M::Int) = ConjugateCache(N, N, M, M)
+
 # ==============================================================================
 # 2. The Low-Level 1D Workhorses (Fenchel Sweeps)
 # ==============================================================================
@@ -144,6 +148,15 @@ function compute_conjugate_and_map!(g::Matrix{Float64}, T1::Matrix{Int}, T2::Mat
     end
 end
 
+function compute_conjugate_and_map!(g::Matrix{Float64}, T1::Matrix{Int}, T2::Matrix{Int}, 
+                                    y::Vector{Float64}, # Target Grid
+                                    f::Matrix{Float64}, 
+                                    x::Vector{Float64}, # Source Grid
+                                    cache::ConjugateCache)
+    
+    return compute_conjugate_and_map!(g, T1, T2, y, y, f, x, x, cache)
+end
+
 """
     compute_conjugate!(g, y1, y2, f, x1, x2, cache)
 
@@ -167,6 +180,14 @@ function compute_conjugate!(g::Matrix{Float64},
         @views fenchel_1d_value!(g[:, j], y1, cache.w[:, j], -1.0, x1, cache.hull_stack)
     end
 end
+
+function compute_conjugate!(g::Matrix{Float64}, y::Vector{Float64}, 
+                            f::Matrix{Float64}, x::Vector{Float64}, 
+                            cache::ConjugateCache)
+    
+    return compute_conjugate!(g, y, y, f, x, x, cache)
+end
+
 
 # ==============================================================================
 # 4. The Casual API (Allocating, User-Friendly)
@@ -196,6 +217,13 @@ function compute_conjugate_and_map(f::Matrix{Float64},
     return g, T1, T2
 end
 
+function compute_conjugate_and_map(f::Matrix{Float64}, 
+                                   x::Vector{Float64}, # Source Grid
+                                   y::Vector{Float64}) # Target Grid
+    
+    return compute_conjugate_and_map(f, x, x, y, y)
+end
+
 """
     compute_conjugate(f, x1, x2, y1, y2)
 """
@@ -216,6 +244,13 @@ function compute_conjugate(f::Matrix{Float64},
     compute_conjugate!(g, y1, y2, f, x1, x2, cache)
     
     return g
+end
+
+function compute_conjugate(f::Matrix{Float64}, 
+                           x::Vector{Float64}, # Source Grid
+                           y::Vector{Float64}) # Target Grid
+    
+    return compute_conjugate(f, x, x, y, y)
 end
 
 end # module ConvexConjugates
